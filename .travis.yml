@@ -1,0 +1,29 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t csoulioti/react-fibonacci-docker -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run csoulioti/react-fibonacci-docker npm run test -- --coverage
+
+after_success:
+  - docker build -t csoulioti/react-fibonacci-docker-client ./client
+  - docker build -t csoulioti/react-fibonacci-docker-nginx ./nginx
+  - docker build -t csoulioti/react-fibonacci-docker-server ./server
+  - docker build -t csoulioti/react-fibonacci-docker-worker ./worker
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID"
+
+deploy:
+  provider: elasticbeanstalk
+  region: 'us-east-2'
+  app: 'react-fibonacci-docker'
+  env: 'ReactDocker-env'
+  bucket_name: 'elasticbeanstalk-us-east-2-679975177779'
+  bucket_path: 'react-fibonacci-docker'
+  on:
+    branch: master
+  access_key_id: $AWS_ACCESS_KEY
+  secret_access_key:
+    secure: '$AWS_SECRET_KEY'
