@@ -1,22 +1,35 @@
 sudo: required
 services:
-  - docker
+    - docker
 
 before_install:
-  - docker build -t csoulioti/react-fibonacci-docker -f ./client/Dockerfile.dev ./client
+    - docker build -t csoulioti/react-fibonacci-docker -f ./client/Dockerfile.dev ./client
 
 script:
-  - docker run csoulioti/react-fibonacci-docker npm run test -- --coverage
+    - docker run csoulioti/react-fibonacci-docker npm run test -- --coverage
 
 after_success:
-  - docker build -t csoulioti/react-fibonacci-docker-client ./client
-  - docker build -t csoulioti/react-fibonacci-docker-nginx ./nginx
-  - docker build -t csoulioti/react-fibonacci-docker-server ./server
-  - docker build -t csoulioti/react-fibonacci-docker-worker ./worker
-  # Log in to the docker cli
-  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
-  # Take those images and push then to docker hub
-  - docker push csoulioti/react-fibonacci-docker-client
-  - docker push csoulioti/react-fibonacci-docker-nginx
-  - docker push csoulioti/react-fibonacci-docker-server
-  - docker push csoulioti/react-fibonacci-docker-worker
+    - docker build -t csoulioti/react-fibonacci-docker-client ./client
+    - docker build -t csoulioti/react-fibonacci-docker-nginx ./nginx
+    - docker build -t csoulioti/react-fibonacci-docker-server ./server
+    - docker build -t csoulioti/react-fibonacci-docker-worker ./worker
+    # Log in to the docker cli
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # Take those images and push then to docker hub
+    - docker push csoulioti/react-fibonacci-docker-client
+    - docker push csoulioti/react-fibonacci-docker-nginx
+    - docker push csoulioti/react-fibonacci-docker-server
+    - docker push csoulioti/react-fibonacci-docker-worker
+
+deploy:
+    provider: elasticbeanstalk
+    region: us-east-2
+    app: multi-docker
+    env: MultiDocker-env
+    bucket_name: 'elasticbeanstalk-us-east-2-679975177779'
+    bucket_path: 'docker-multi'
+    on:
+        branch: master
+    access_key_id: $AWS_ACCESS_KEY
+    secret_access_key:
+        secure: '$AWS_SECRET_KEY'
